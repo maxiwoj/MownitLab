@@ -13,13 +13,11 @@ float recurrentSum(int first, int last);
 void writeToFileApproxError(float finalValue, float sum);
 float kahanSum();
 float iterSum();
-void testdzetaRiemanna();
+void zad3();
 void zad4Float();
 void zad4Double();
-
 void zad4C();
-
-void zad4();
+void zad4A();
 
 using namespace std;
 
@@ -62,9 +60,9 @@ int main() {
     cout << "Approximation Error: " << finalValue - sum << endl;
     cout << "Relative Approximation Error: " << fabs((finalValue - sum) / finalValue) * 100 << "%" <<endl;
 
-    testdzetaRiemanna();
+    zad3();
 
-    zad4();
+    zad4A();
     zad4Float();
     zad4Double();
     zad4C();
@@ -100,6 +98,8 @@ float kahanSum() {
     return sum;
 }
 
+//----------------------------------------------------------------------------------
+
 float partialSumDzetaRiemannaForward(int n, float s) {
     float sum = 0.0f;
     for(int k = 1 ; k < n ; k++){
@@ -131,7 +131,9 @@ float partialSumDirichletBackward(int n, float s) {
     return sum;
 }
 
-void zad4(){
+//-------------------------------------------------------------------------------------
+
+void zad4A(){
     ofstream myfile;
     myfile.open("zad4.txt");
     set<tuple<float, float>> values;
@@ -219,7 +221,7 @@ void writeToFileApproxError(float finalValue, float sum) {
 
 }
 
-void testdzetaRiemanna(){
+void zad3(){
     float s[] = {2, 3.6667, 5, 7.2, 10};
     int n[] = { 50, 100, 200, 500, 1000};
     cout<<"----------------------------- DZETA - RIEMANNA ------------------------------"<< endl;
