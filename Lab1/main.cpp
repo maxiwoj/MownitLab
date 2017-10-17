@@ -7,7 +7,7 @@
 
 float tab[N];
 float approximationError[N / 25000 + 1];
-float value = 0.54635;
+float value = 0.54635f;
 
 float recurrentSum(int first, int last);
 void writeToFileApproxError(float finalValue, float sum);
@@ -34,7 +34,6 @@ int main() {
     float sum = iterSum();
     double iterDuration = ( clock() - iterStart ) / (double) CLOCKS_PER_SEC;
     cout << "Iter Duration: " << iterDuration << endl;
-
     cout << "Sum: " <<sum << endl;
     cout << "Approximation Error: " << finalValue - sum << endl;
     cout << "Relative Approximation Error: " << fabs((finalValue - sum) / finalValue) * 100 << "%" <<endl;
@@ -75,7 +74,7 @@ float iterSum() {
     for(int i = 0 ; i < N ; i++){
         sum += tab[i];
         if(i % 25000 == 0){
-            approximationError[i / 25000] = ((i+1) * value - sum) / sum;
+            approximationError[i / 25000] = ((i+1) * value - sum) / ((i+1) * value);
         }
     }
     return sum;
@@ -98,16 +97,32 @@ float kahanSum() {
     return sum;
 }
 
-//----------------------------------------------------------------------------------
+//----------------------------------------------ZAD3------------------------------------
 
-float partialSumDzetaRiemannaForward(int n, float s) {
+double partialSumRiemmanDouble(int n, double s) {
+    double sum = 0.0;
+    for(int k = 1 ; k < n ; k++){
+        sum += (1/(pow(k,s)));
+    }
+    return sum;
+}
+
+double partialSumDirichletDouble(int n, double s) {
+    double sum = 0.0f;
+    for(int k = 1 ; k < n ; k++){
+        sum += (k % 2 == 0 ? -1 : 1) * (1/pow(k,s));
+    }
+    return sum;
+}
+
+float partialSumRiemannForward(int n, float s) {
     float sum = 0.0f;
     for(int k = 1 ; k < n ; k++){
         sum += (1/(pow(k,s)));
     }
     return sum;
 }
-float partialSumDzetaRiemannaBackWard(int n, float s) {
+float partialSumRiemannBackward(int n, float s) {
     float sum = 0.0f;
     for(int k = n -1 ; k > 0 ; k--){
         sum += 1/(pow(k,s));
@@ -118,7 +133,7 @@ float partialSumDzetaRiemannaBackWard(int n, float s) {
 float partialSumDirichletForward(int n, float s) {
     float sum = 0.0f;
     for(int k = 1 ; k < n ; k++){
-        sum += pow(-1, (k-1) % 2) * (1/pow(k,s));
+        sum += (k % 2 == 0 ? -1 : 1) * (1/pow(k,s));
     }
     return sum;
 }
@@ -126,19 +141,19 @@ float partialSumDirichletForward(int n, float s) {
 float partialSumDirichletBackward(int n, float s) {
     float sum = 0.0f;
     for(int k = n -1 ; k > 0 ; k--){
-        sum += pow(-1, (k-1) % 2) * (1/pow(k,s));
+        sum += ((k % 2 == 0 ? -1 : 1)) * (1/pow(k,s));
     }
     return sum;
 }
 
-//-------------------------------------------------------------------------------------
+//---------------------------------------------ZAD4----------------------------------------
 
 void zad4A(){
     ofstream myfile;
     myfile.open("zad4.txt");
     set<tuple<float, float>> values;
     for(float r = 2.5 ; r < 4 ; r+=0.0001) {
-        float prev = 0.3f;
+        float prev = 0.6f;
         for(int i = 0 ; i < 10000 ; i++){
             prev = r * prev * (1 - prev);
             if(i > 9900) {
@@ -149,6 +164,7 @@ void zad4A(){
     for(tuple<float, float> f : values) {
         myfile << get<0>(f) << " " << get<1>(f) << endl;
     }
+    myfile.close();
 }
 
 void zad4Float(){
@@ -159,7 +175,7 @@ void zad4Float(){
             float prev = 0.3f;
             for(int i = 0 ; i < 10000 ; i++){
                 prev = r * prev * (1 - prev);
-                if(i > 9900) {
+                if(i > 9000) {
                     values.insert({r, prev});
                 }
             }
@@ -167,6 +183,7 @@ void zad4Float(){
     for(tuple<float, float> f : values) {
         myfile << get<0>(f) << " " << get<1>(f) << endl;
     }
+    myfile.close();
 }
 
 void zad4Double(){
@@ -177,7 +194,7 @@ void zad4Double(){
         double prev = 0.3f;
         for(int i = 0 ; i < 10000 ; i++){
             prev = r * prev * (1 - prev);
-            if(i > 9900) {
+            if(i > 9000) {
                 values.insert({r, prev});
             }
         }
@@ -185,39 +202,39 @@ void zad4Double(){
     for(tuple<double, double> f : values) {
         myfile << get<0>(f) << " " << get<1>(f) << endl;
     }
+    myfile.close();
 }
 
 void zad4C(){
     ofstream myfile;
     myfile.open("zad4C.txt");
 
-    for(float x = 0.01 ; x < 1 ; x += 0.01){
+    for(float x = 0.01 ; x < 1 ; x += 0.00001){
         float prev = x;
         bool toPrint = true;
         int counter;
-        for(counter = 0 ; prev > 0 ; counter ++) {
+        for(counter = 0 ; prev != 0.0f ; counter ++) {
             prev = 4 * prev * (1 - prev);
-            if(counter > 10000000) {
+            if(counter > 100000) {
                 toPrint = false;
                 break;
             }
         }
         if(toPrint) myfile << x << " " << counter << endl;
-
     }
+    myfile.close();
 }
 
-//----------------------------------------------------------
+//------------------------------------FUNKCJE DOD-------------------------------------
 
 void writeToFileApproxError(float finalValue, float sum) {
     ofstream approxErrorFile;
     approxErrorFile.open("gnuPlot.txt");
     for(int i = 0 ; i < N / 25000 ; i++){
-        approxErrorFile << i << " "<< approximationError[i] << endl;
+        approxErrorFile << i * 25000 << " "<< approximationError[i] << endl;
     }
     approxErrorFile << N/25000 << " " << ((finalValue - sum) / finalValue);
     approxErrorFile.close();
-
 
 }
 
@@ -225,18 +242,21 @@ void zad3(){
     float s[] = {2, 3.6667, 5, 7.2, 10};
     int n[] = { 50, 100, 200, 500, 1000};
     cout<<"----------------------------- DZETA - RIEMANNA ------------------------------"<< endl;
-    cout<<"n\t\t\t\ts\t\t\t\tdifference"<<endl;
+    cout<<"n\ts\tBackward\tForward"<<endl;
     for(int i = 0 ; i < 5 ; i++){
         for(int j = 0 ; j < 5 ; j++){
-            cout<< n[i] << "  \t\t\t" << s[j] << "\t\t\t" << partialSumDzetaRiemannaBackWard(n[i], s[j]) - partialSumDzetaRiemannaForward(n[i], s[j])<<endl;
+            cout<< n[i] << "  \t" << s[j] << "\t" << partialSumRiemmanDouble(n[i], s[j]) - partialSumRiemannBackward(n[i], s[j]) << "\t" <<
+                    partialSumRiemmanDouble(n[i], s[j]) - partialSumRiemannForward(n[i], s[j])<<endl;
         }
     }
     cout<<"---------------------------------- DIRICHLETA ------------------------------"<< endl;
-    cout<<"n\t\t\t\ts\t\t\t\tdifference"<<endl;
+    cout<<"n\ts\tBackward\tForward"<<endl;
     for(int i = 0 ; i < 5 ; i++){
         for(int j = 0 ; j < 5 ; j++){
-            cout<<n[i] << "  \t\t\t" << s[j] << "\t\t\t" << partialSumDirichletBackward(n[i], s[j]) -
-                    partialSumDirichletForward(n[i], s[j])<<endl;
+            cout<<n[i] << "\t" << s[j] << "\t" << partialSumDirichletDouble(n[i], s[j]) - partialSumDirichletBackward(n[i], s[j]) << "\t" <<
+                                                                                                                                         partialSumDirichletDouble(
+                                                                                                                                                 n[i],
+                                                                                                                                                 s[j]) - partialSumDirichletForward(n[i], s[j])<<endl;
         }
     }
 }
