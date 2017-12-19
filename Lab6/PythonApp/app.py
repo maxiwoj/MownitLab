@@ -9,6 +9,7 @@ import itertools
 from math import log
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer, TfidfVectorizer
 from sklearn.externals import joblib
+import heapq
 
 def parse_words(tokens, ps, wnl):
     for t in tokens:
@@ -34,9 +35,9 @@ def load_sparse_csr(filename):
                          shape = loader['shape'])
 
 vectorizer = joblib.load('vectorizer.pkl')
-bag_of_words = load_sparse_csr('bag_of_words.npz')
+bag_of_words = load_sparse_csr('bag_of_words.npz').toarray()
 bag_of_words_svd = np.load('bag_of_words_svd.npy')
-articles = pd.read_csv('buzzfeed.csv').head(10000)
+articles = pd.read_csv('buzzfeed.csv').head(15000)
 
 app = Flask(__name__)
 
@@ -52,16 +53,18 @@ def count_non_zero(bag_of_words):
     else:
         return np.count_nonzero(bag_of_words)
 
-
 def get_best_result(query, bag_of_words, k=10):
     query_vec = vectorizer.transform([query])[0]
     query_length = query_vec.count_nonzero()
-    number_of_docs = len(articles)
-    matches = {i: 0 for i in range(number_of_docs)}
+    number_of_docs = articles.shape[0]
+    matches = dict()
     for i in tqdm(range(number_of_docs)):
-        matches[i] = query_vec.multiply(bag_of_words[i]).sum()/(query_length * count_non_zero(bag_of_words[i]))
-#         matches[i] = [word * backOfWords[i,j] for j,word in enumerate(query_vec.nonzero()[1])][0].sum()/(query_length * backOfWords[i].count_nonzero())
-    return list(dict(sorted(matches.items(), key=lambda x: x[1], reverse=True)))[:k]
+        matches[i] = 0
+        for word_index in query_vec.indices:
+            matches[i] += bag_of_words[i, word_index]
+        matches[i] /= (query_length * count_non_zero(bag_of_words[i]))
+#         query_vec.multiply(bag_of_words[i]).sum()/(query_length * count_non_zero(bag_of_words[i]))
+    return list(dict(heapq.nlargest(k, matches.items(), key=lambda x: x[1])))
 
 def print_urls(best_results):
     best_results = list(map(lambda x: texts['url'][x], best_results))
