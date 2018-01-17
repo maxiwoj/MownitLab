@@ -56,6 +56,8 @@ def count_non_zero(bag_of_words):
 def get_best_result(query, bag_of_words, k=10):
     query_vec = vectorizer.transform([query])[0]
     query_length = query_vec.count_nonzero()
+    if query_length == 0:
+    	raise Exception("Your query does not contain any significant words")
     number_of_docs = articles.shape[0]
     matches = dict()
     for i in tqdm(range(number_of_docs)):
@@ -63,7 +65,7 @@ def get_best_result(query, bag_of_words, k=10):
         for word_index in query_vec.indices:
             matches[i] += bag_of_words[i, word_index]
         matches[i] /= (query_length * count_non_zero(bag_of_words[i]))
-#         query_vec.multiply(bag_of_words[i]).sum()/(query_length * count_non_zero(bag_of_words[i]))
+        # query_vec.multiply(bag_of_words[i]).sum()/(query_length * count_non_zero(bag_of_words[i]))
     return list(dict(heapq.nlargest(k, matches.items(), key=lambda x: x[1])))
 
 def print_urls(best_results):
@@ -77,7 +79,10 @@ def print_urls(best_results):
 def basicSearch():
 	best_results=[]
 	if request.method == 'POST':
-		best_results = list(map(lambda x: articles['url'][x],get_best_result(request.form['query'], bag_of_words)))
+		try:
+			best_results = list(map(lambda x: articles['url'][x],get_best_result(request.form['query'], bag_of_words)))
+		except Exception as e:
+			best_results = [e.args[0]]
 		
 	return render_template('basicSearch.html', best_matches=best_results)
 
@@ -85,7 +90,10 @@ def basicSearch():
 def svdSearch():
 	best_results=[]
 	if request.method == 'POST':
-		best_results = list(map(lambda x: articles['url'][x],get_best_result(request.form['query'], bag_of_words_svd)))
+		try:
+			best_results = list(map(lambda x: articles['url'][x],get_best_result(request.form['query'], bag_of_words)))
+		except Exception as e:
+			best_results = [e.args[0]]
 		
 	return render_template('svdSearch.html', best_matches=best_results)
 
